@@ -1,0 +1,135 @@
+#/bin/sh
+
+read -p "Are you sure install dnsmasq and hosapd? [y/N] " response
+echo "respond:"$response
+
+if [[ "$response" == "y" ]]; then
+        sudo apt-get -y install dnsmasq hostapd
+        sudo systemctl stop dnsmasq
+        sudo systemctl stop hostapd
+fi
+#WLan=$(/sbin/ip -o -4 addr list wlan0 | awk '{print $4}' | cut -d/ -f1)
+
+addlan=192.168.1.87
+addRPI=192.168.4.1
+addstart=192.168.4.2
+addstop=192.168.4.200
+
+echo "addlan:"$addlan
+echo "addRPI:"$addRPI
+echo "addstart:"$addstart
+echo "addstop:"$addstop
+
+read -p "Are you sure demandeIP? [y/N] " response
+echo "respond:"$response
+
+if [[ "$response" == "y" ]]; then
+        echo"addlan :"
+        read addlan
+        echo "addRPI :"
+        read addRPI
+        echo "addstart:"
+        read addstart
+        echo "addstop:"
+        read addstop
+
+        echo $addRPI
+        echo $addstart
+        echo $addstop
+
+fi
+
+
+read -r -p "Are you sure modif dhcpcd? [y/N] " response
+if [[ "$response" == "y" ]]; then
+
+        echo "copie de /etc/dhcpcd.conf /etc/dhcpcd.conf.orig"
+        sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.orig
+        echo "Modification du fichier dhcpd.conf avec ipstatic : "$WLan
+
+echo "interface wlan0
+           static ip_address="$addRPI"/24
+           nohook wpa_supplicant
+
+        interface eth0
+            static ip_address="$addlan"/24
+            #static routers=10.0.0.1
+            #static domain_name_servers=10.0.0.1
+">> /etc/dhcpcd.conf
+
+        echo "ok - restart dhcpd service"
+        #sudo service dhcpcd restart
+fi
+
+read -r -p "Are you sure dnsmasq ? [y/N] " response
+if [[ "$response" == "y" ]]; then
+
+        echo "copie de /etc/dnsmasq.conf /etc/dnsmasq.conf.orig"
+        sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+        echo "Modification du fichier dnsmasq.conf "
+        echo "interface=wlan0      # Use the require wireless interface - usually wlan0
+        dhcp-range="$addstart","$addstop",255.255.255.0,24h" >> /etc/dnsmasq.conf
+        echo "start dnsmasq"
+        sudo systemctl start dnsmasq
+fi
+
+
+read -r -p "Are you sure hostapd ? [y/N] " response
+if [[ "$response" == "y" ]]; then
+
+        echo "copie de /etc/hostapd/hostapd.conf .orig"
+        sudo mv /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.orig
+        echo "Modification du fichier hostapd.conf "
+
+        echo "interface=wlan0
+driver=nl80211
+ssid=boxscore_network
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=lemotdepass
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+" >>/etc/hostapd/hostapd.conf
+
+fi
+
+read -r -p "Are you sure hostapd deamonconf ? [y/N] " response
+if [[ "$response" == "y" ]]; then
+        echo "DAEMON_CONF="/etc/hostapd/hostapd.conf"" >> /etc/default/hostapd
+        #sudo hostapd -d /etc/hostapd/hostapd.conf
+fi
+
+
+read -r -p "Are you sure start all conf ? [y/N] " response
+if [[ "$response" == "y" ]]; then
+        echo "start all services"
+
+        sudo systemctl stop dnsmasq
+        sudo systemctl stop hostapd
+
+        sudo service dhcpcd restart
+        sudo systemctl unmask hostapd
+        sudo systemctl enable hostapd
+        sudo systemctl start hostapd
+
+        echo "-------verification status------"
+#       sudo systemctl status hostapd
+#       sudo systemctl status dnsmasq
+
+#       sudo systemctl restart networking
+fi
+
+echo "----NODERED---
+read -r -p "Are you sure hostapd deamonconf ? [y/N] " response
+if [[ "$response" == "y" ]]; then
+        sudo systemctl enable nodered.service
+fi
+
+
+
