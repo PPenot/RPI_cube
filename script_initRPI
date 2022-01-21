@@ -51,8 +51,8 @@ echo "interface wlan0
            static ip_address="$addRPI"/24
            nohook wpa_supplicant
 
-        interface eth0
-            static ip_address="$addlan"/24
+        #interface eth0
+            #static ip_address="$addlan"/24
             #static routers=10.0.0.1
             #static domain_name_servers=10.0.0.1
 ">> /etc/dhcpcd.conf
@@ -125,7 +125,7 @@ if [[ "$response" == "y" ]]; then
 #       sudo systemctl restart networking
 fi
 
-echo "----NODERED---
+echo "----NODERED---"
 read -r -p "Are you sure hostapd deamonconf ? [y/N] " response
 if [[ "$response" == "y" ]]; then
         sudo systemctl enable nodered.service
