@@ -39,7 +39,6 @@ if [[ "$response" == "y" ]]; then
 
 fi
 
-
 read -r -p "Are you sure modif dhcpcd? [y/N] " response
 if [[ "$response" == "y" ]]; then
 
@@ -98,7 +97,6 @@ rsn_pairwise=CCMP
 " >>/etc/hostapd/hostapd.conf
 
 fi
-
 read -r -p "Are you sure hostapd deamonconf ? [y/N] " response
 if [[ "$response" == "y" ]]; then
         echo "DAEMON_CONF="/etc/hostapd/hostapd.conf"" >> /etc/default/hostapd
@@ -122,7 +120,7 @@ if [[ "$response" == "y" ]]; then
 #       sudo systemctl status hostapd
 #       sudo systemctl status dnsmasq
 
-#       sudo systemctl restart networking
+        sudo systemctl restart networking
 fi
 
 echo "----NODERED---"
@@ -130,6 +128,3 @@ read -r -p "Are you sure hostapd deamonconf ? [y/N] " response
 if [[ "$response" == "y" ]]; then
         sudo systemctl enable nodered.service
 fi
-
-
-
